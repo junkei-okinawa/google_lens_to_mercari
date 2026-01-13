@@ -1,0 +1,17 @@
+以下のGoogle Lensの検索結果から、メルカリでの検索に最適な商品情報を抽出してください。
+
+# 検索結果
+{% for result in results %}
+- タイトル: {{ result.title }}
+  スニペット: {{ result.snippet }}
+{% endfor %}
+
+# 出力形式 (JSON)
+{
+  "brand": "ブランド名",
+  "model_number": "型番（不明な場合はnull）",
+  "product_name": "具体的な商品名",
+  "features": ["特徴1", "特徴2"],
+  "suggested_query": "メルカリで検索するためのキーワード（ブランド 型番 商品名 特徴を組み合わせたもの）"
+}
+JSONオブジェクトのみを返してください。

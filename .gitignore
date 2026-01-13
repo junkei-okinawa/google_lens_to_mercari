@@ -1,0 +1,29 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+.env
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Tailwind
+static/css/style.css
+!static/css/input.css
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Testing
+.pytest_cache/
+tests/e2e/test-results/
+tests/e2e/playwright-report/

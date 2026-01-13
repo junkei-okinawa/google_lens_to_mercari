@@ -1,0 +1,24 @@
+# Build stage
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv /bin/
+
+# Install dependencies
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-cache
+
+# Run stage
+FROM python:3.12-slim
+
+WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
+COPY . .
+
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PORT=8080
+
+EXPOSE 8080
+
+# Run the app
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

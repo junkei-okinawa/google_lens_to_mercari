@@ -1,0 +1,76 @@
+<div
+    class="glass-card p-8 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 bg-gradient-to-br from-white/[0.05] to-transparent">
+
+    <!-- Hero Info -->
+    <div class="flex items-start justify-between">
+        <div class="space-y-1">
+            <span class="text-[10px] font-black uppercase tracking-[0.2em] text-mercari italic">Extraction
+                Complete</span>
+            <h2 class="text-2xl font-black tracking-tight leading-tight">
+                {% if product_info %}
+                {{ product_info.product_name }}
+                {% else %}
+                アイテムを特定できません
+                {% endif %}
+            </h2>
+        </div>
+        {% if product_info and product_info.brand %}
+        <div class="px-3 py-1 bg-white/10 rounded-full border border-white/10 flex items-center gap-2">
+            <div class="w-1.5 h-1.5 bg-mercari rounded-full animate-pulse"></div>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-gray-300">
+                {{ product_info.brand }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if product_info %}
+    <!-- Tags / Details -->
+    <div class="flex flex-wrap gap-2">
+        {% if product_info.model_number %}
+        <div class="px-4 py-2 bg-white/5 rounded-xl border border-white/5 flex flex-col">
+            <span class="text-[8px] text-gray-500 font-bold uppercase">Model Number</span>
+            <span class="text-sm font-bold text-gray-200">{{ product_info.model_number }}</span>
+        </div>
+        {% endif %}
+
+        {% for feature in product_info.features %}
+        <div class="px-4 py-2 bg-white/5 rounded-xl border border-white/5 flex items-center">
+            <span class="text-xs font-medium text-gray-400"># {{ feature }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Call to Action -->
+    <div class="mt-4 space-y-4">
+        <div class="p-4 bg-black/40 rounded-2xl border border-white/5">
+            <p class="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1">Optimized Search Query</p>
+            <p class="text-sm text-gray-100 font-medium italic">"{{ product_info.suggested_query }}"</p>
+        </div>
+
+        <a href="{{ mercari_url }}" target="_blank"
+            class="relative group block w-full overflow-hidden rounded-2xl p-px">
+            <!-- Glowing Background -->
+            <div class="absolute inset-0 mercari-gradient animate-pulse"></div>
+            <!-- Content -->
+            <div
+                class="relative bg-[#050505] group-hover:bg-transparent transition-colors py-4 text-center font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3">
+                <span>売れた実績（相場）を確認</span>
+                <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                        d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </div>
+        </a>
+
+        <p class="text-center text-[9px] text-gray-600 font-bold tracking-tighter">
+            * メルカリの新着順・売切済フィルタが自動適用されます
+        </p>
+    </div>
+    {% else %}
+    <div class="p-6 bg-white/5 rounded-2xl border border-white/10 text-center">
+        <p class="text-sm text-gray-400">商品の詳細が特定できませんでした。<br>ロゴや全体が写るように再撮影してください。</p>
+    </div>
+    {% endif %}
+</div>

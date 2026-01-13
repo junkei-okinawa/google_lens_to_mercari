@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sedori Lens - プレミアム相場調査</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <script src="{{ url_for('static', path='js/htmx.min.js') }}"></script>
+    <script src="{{ url_for('static', path='js/alpine.min.js') }}" defer></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: #ff002e;
+            box-shadow: 0 0 15px #ff002e;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="safe-top safe-bottom overflow-x-hidden">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 p-6 flex items-center justify-between backdrop-blur-md bg-black/20">
+        <div class="flex items-center gap-2">
+            <div class="w-2 h-8 mercari-gradient rounded-full"></div>
+            <h1 class="text-xl font-black tracking-tighter uppercase italic">Sedori Lens</h1>
+        </div>
+        <button @click="$dispatch('open-guide')"
+            class="w-10 h-10 rounded-full glass-card flex items-center justify-center hover:bg-white/10 transition-colors">
+            <span class="text-lg">?</span>
+        </button>
+    </header>
+
+    <!-- Main Container -->
+    <main class="min-h-screen pt-24 pb-12 px-6 max-w-lg mx-auto flex flex-col gap-8" x-data="appHandler()">
+
+        <!-- Instruction Overlay -->
+        <div x-show="showGuide" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="fixed inset-0 z-[100] p-6 flex items-center justify-center bg-black/80 backdrop-blur-md"
+            @open-guide.window="showGuide = true" x-cloak>
+            <div class="glass-card p-8 w-full max-w-sm flex flex-col gap-6" @click.away="showGuide = false">
+                <h2 class="text-2xl font-bold">使い方ガイド</h2>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <span
+                            class="w-8 h-8 rounded-full mercari-gradient flex-shrink-0 flex items-center justify-center font-bold">1</span>
+                        <p class="text-gray-300">商品を明るい場所で、ロゴやタグがはっきり見えるように配置します。</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <span
+                            class="w-8 h-8 rounded-full mercari-gradient flex-shrink-0 flex items-center justify-center font-bold">2</span>
+                        <p class="text-gray-300">シャッターボタンを押して撮影。AIが自動的に情報を抽出します。</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <span
+                            class="w-8 h-8 rounded-full mercari-gradient flex-shrink-0 flex items-center justify-center font-bold">3</span>
+                        <p class="text-gray-300">「売れた実績」ボタンからメルカリの直近相場へジャンプ！</p>
+                    </div>
+                </div>
+                <button @click="showGuide = false"
+                    class="mt-4 w-full py-4 mercari-gradient rounded-2xl font-bold shadow-xl shadow-mercari/20">
+                    はじめる
+                </button>
+            </div>
+        </div>
+
+        <!-- Camera / Preview Area -->
+        <div class="relative w-full aspect-[3/4] glass-card overflow-hidden group">
+            <!-- Video Feed -->
+            <video x-ref="video"
+                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                autoplay playsinline x-show="!captured"></video>
+
+            <!-- Shutter Snapshot Flash -->
+            <div x-show="flashing" class="absolute inset-0 z-50 flash-effect" x-cloak></div>
+
+            <!-- Captured Image Preview -->
+            <img :src="photo" class="absolute inset-0 w-full h-full object-cover" x-show="captured" x-cloak>
+
+            <!-- Guide Frame -->
+            <div x-show="!captured"
+                class="absolute inset-12 border-2 border-white/20 rounded-3xl pointer-events-none transition-opacity duration-300"
+                :class="streamActive ? 'opacity-100' : 'opacity-0'">
+                <div
+                    class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-mercari -mt-1 -ml-1 rounded-tl-lg">
+                </div>
+                <div
+                    class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-mercari -mt-1 -mr-1 rounded-tr-lg">
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-mercari -mb-1 -ml-1 rounded-bl-lg">
+                </div>
+                <div
+                    class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-mercari -mb-1 -mr-1 rounded-br-lg">
+                </div>
+            </div>
+
+            <!-- Empty State / Start Camera -->
+            <div x-show="!streamActive && !captured"
+                class="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-neutral-900/50">
+                <div class="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center floating">
+                    <svg class="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <circle cx="12" cy="13" r="3" />
+                    </svg>
+                </div>
+                <button @click="startCamera()"
+                    class="px-8 py-4 bg-white text-black font-bold rounded-full shadow-2xl active:scale-95 transition-all">
+                    カメラを有効にする
+                </button>
+                <div class="relative w-full px-12 flex items-center gap-4">
+                    <div class="flex-1 h-px bg-white/10"></div>
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-widest">OR</span>
+                    <div class="flex-1 h-px bg-white/10"></div>
+                </div>
+                <label class="cursor-pointer group flex flex-col items-center">
+                    <span
+                        class="text-sm border-b border-white/20 group-hover:border-white transition-colors">ファイルを選択</span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleFileUpload($event)">
+                </label>
+            </div>
+
+            <canvas x-ref="canvas" class="hidden"></canvas>
+        </div>
+
+        <!-- Progress Bar (Visible during analysis) -->
+        <div x-show="analyzing" class="w-full h-1 bg-white/5 rounded-full overflow-hidden" x-cloak>
+            <div class="loading-bar" :style="'width: ' + progress + '%'"></div>
+        </div>
+
+        <!-- Controls Container -->
+        <div class="flex flex-col items-center gap-10">
+            <!-- Shutter Button Area -->
+            <div class="relative flex items-center justify-center">
+
+                <!-- Shutter Button (Camera Mode & Result Mode) -->
+                <!-- Result Mode (captured=true) の時は "Next Scan" として機能する -->
+                <button x-show="!analyzing" @click="takePhoto()" id="shutter-button"
+                    class="shutter-btn group transition-transform duration-300"
+                    :class="captured ? 'scale-75' : 'scale-100'">
+                    <div class="shutter-inner group-active:scale-90 transition-transform"></div>
+                    <!-- Reuse Icon for Result Mode -->
+                    <div x-show="captured"
+                        class="absolute inset-0 flex items-center justify-center text-mercari font-bold" x-cloak>
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </div>
+                </button>
+
+                <!-- Analyzing Indicator -->
+                <div x-show="analyzing"
+                    class="w-20 h-20 rounded-full flex items-center justify-center bg-white/5 animate-pulse" x-cloak>
+                    <div class="w-8 h-8 border-4 border-mercari border-t-transparent rounded-full animate-spin">
+                    </div>
+                </div>
+            </div>
+
+            <!-- File selection label -->
+            <!-- Show in Camera Mode OR Result Mode (when not analyzing) -->
+            <div x-show="!analyzing" class="flex flex-col items-center gap-2">
+
+                <div x-show="!captured" class="text-gray-500 text-xs font-bold uppercase tracking-widest text-center">
+                    CENTER THE ITEM
+                </div>
+
+                <!-- Result Mode: Show distinct file upload button or icon -->
+                <label
+                    class="cursor-pointer group flex items-center gap-2 px-4 py-2 rounded-full glass-card hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-sm text-gray-300 group-hover:text-white transition-colors"
+                        x-text="captured ? '別の画像を選択' : 'ファイルを選択'"></span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleFileUpload($event)">
+                </label>
+            </div>
+        </div>
+
+        <!-- Hidden Input for htmx -->
+        <form id="analyze-form" class="hidden" hx-encoding="multipart/form-data">
+            <input type="text" name="image_data" x-model="photo">
+        </form>
+
+        <!-- Results Section -->
+        <div id="results-container" class="w-full">
+            <!-- Results will be injected here by htmx -->
+        </div>
+    </main>
+
+    <script>
+        function appHandler() {
+            return {
+                photo: null,
+                captured: false,
+                streamActive: false,
+                analyzing: false,
+                flashing: false,
+                showGuide: false,
+                progress: 0,
+                stream: null,
+
+                async startCamera() {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        alert('カメラにアクセスできません。HTTPS接続またはlocalhostでの使用を確認してください。');
+                        return;
+                    }
+                    try {
+                        this.stream = await navigator.mediaDevices.getUserMedia({
+                            video: {
+                                facingMode: 'environment',
+                                width: { ideal: 1920 },
+                                height: { ideal: 1080 }
+                            },
+                            audio: false
+                        });
+                        this.$refs.video.srcObject = this.stream;
+                        this.streamActive = true;
+                    } catch (err) {
+                        alert('カメラにアクセスできません: ' + err.message);
+                    }
+                },
+
+                async takePhoto() {
+                    // 既に撮影済みの場合はリセットして再撮影モードへ（One-Tap Loop）
+                    if (this.captured && !this.analyzing) {
+                        this.reset();
+                        return;
+                    }
+
+                    // 新しい撮影のタイミングで前の結果をクリア
+                    document.getElementById('results-container').innerHTML = '';
+
+                    const video = this.$refs.video;
+                    // readyState 2 以上 (HAVE_CURRENT_DATA) を確認
+                    if (!video.videoWidth || !video.videoHeight || video.readyState < 2) {
+                        alert('カメラの準備が整っていません。再度お試しください。');
+                        return;
+                    }
+
+                    this.flashing = true;
+                    setTimeout(() => this.flashing = false, 300);
+
+                    // 描画が安定するまで極わずかに待機（iPhone対策）
+                    await new Promise(resolve => setTimeout(resolve, 50));
+
+                    const canvas = this.$refs.canvas;
+
+                    // iOS等のメモリ制限対策: 最大解像度を制限(例: 1200px)
+                    const maxDimension = 1200;
+                    let targetWidth = video.videoWidth;
+                    let targetHeight = video.videoHeight;
+
+                    if (targetWidth > maxDimension || targetHeight > maxDimension) {
+                        const scale = Math.min(maxDimension / targetWidth, maxDimension / targetHeight);
+                        targetWidth = Math.floor(targetWidth * scale);
+                        targetHeight = Math.floor(targetHeight * scale);
+                    }
+
+                    canvas.width = targetWidth;
+                    canvas.height = targetHeight;
+
+                    const context = canvas.getContext('2d');
+                    try {
+                        // 背景を黒で塗りつぶし（万が一の透過防止）
+                        context.fillStyle = "#000";
+                        context.fillRect(0, 0, targetWidth, targetHeight);
+
+                        context.drawImage(video, 0, 0, targetWidth, targetHeight);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                        // 万が一データURLが極端に短い（破損）場合はエラー
+                        if (dataUrl.length < 500) { // 破損チェックのしきい値を少し上げる
+                            throw new Error('画像のキャプチャデータが不十分です');
+                        }
+
+                        this.photo = dataUrl;
+                        this.captured = true;
+
+                        // 自動解析開始 (One-Tap Scan)
+                        this.startAnalysis();
+
+                        // ストリームは停止せずに維持する（リセット時の再許可要求を防ぐため）
+                        /*
+                        if (this.stream) {
+                            this.stream.getTracks().forEach(track => track.stop());
+                            this.streamActive = false;
+                        }
+                        */
+                    } catch (err) {
+                        alert('撮影に失敗しました: ' + err.message);
+                        console.error(err);
+                    }
+                },
+
+                handleFileUpload(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    // ファイル選択時も前の結果をクリア
+                    document.getElementById('results-container').innerHTML = '';
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        this.photo = event.target.result;
+                        this.captured = true;
+                        // ファイルアップロード時はカメラを止めても良いが、リセット時に再起動が必要になる。
+                        this.streamActive = false;
+
+                        // 自動解析開始 (One-Tap Scan)
+                        this.startAnalysis();
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                async startAnalysis() {
+                    this.analyzing = true;
+                    this.progress = 0;
+                    this.simulateProgress();
+
+                    try {
+                        // DataURL を Blob に変換
+                        const response = await fetch(this.photo);
+                        const blob = await response.blob();
+
+                        const formData = new FormData();
+                        formData.append('image_file', blob, 'capture.jpg');
+
+                        // fetch でバイナリを送信（より確実）
+                        const uploadResponse = await fetch('/analyze', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!uploadResponse.ok) throw new Error('サーバーエラーが発生しました');
+
+                        const html = await uploadResponse.text();
+                        const target = document.getElementById('results-container');
+                        target.innerHTML = html;
+
+                        // 解析完了処理
+                        this.progress = 100;
+                        setTimeout(async () => {
+                            this.analyzing = false;
+
+                            // 結果までスクロール
+                            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+                            // 自動復帰は廃止（ユーザー手動リセット待ち）
+
+                        }, 500); // プログレスバーが満タンになるのを少し見せる
+
+                    } catch (err) {
+                        alert('保存に失敗しました: ' + err.message);
+                        this.analyzing = false;
+                    }
+                },
+
+                simulateProgress() {
+                    const interval = setInterval(() => {
+                        if (this.progress < 90) {
+                            this.progress += Math.random() * 15;
+                        } else {
+                            clearInterval(interval);
+                        }
+                    }, 500);
+                },
+
+                reset() {
+                    this.photo = null;
+                    this.captured = false;
+                    this.analyzing = false;
+                    this.progress = 0;
+                    document.getElementById('results-container').innerHTML = '';
+
+                    // ストリーム停止中（ファイルアップロード後など）の場合のみ再起動
+                    if (!this.streamActive || !this.stream || this.stream.getTracks().every(t => t.readyState === 'ended')) {
+                        this.startCamera();
+                    } else {
+                        // ストリーム維持中はフラグのみ戻す
+                        this.streamActive = true;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
