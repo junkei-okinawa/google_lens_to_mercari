@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.controllers import main_controller
 
 import logging
@@ -12,6 +13,9 @@ logging.basicConfig(
 
 app = FastAPI(title="Google Lens to Mercari Tool")
 
+# Trust proxy headers (for Cloud Run HTTPS)
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 # Static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -21,4 +25,6 @@ app.include_router(main_controller.router)
 if __name__ == "__main__":
     import uvicorn
 
+    # Cloud Run sets PORT env var, but uvicorn in Dockerfile uses this as fallback/dev
+    # Production run command in Dockerfile overrides this anyway
     uvicorn.run(app, host="0.0.0.0", port=8000)
