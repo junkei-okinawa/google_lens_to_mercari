@@ -14,6 +14,8 @@ logging.basicConfig(
 app = FastAPI(title="Google Lens to Mercari Tool")
 
 # Trust proxy headers (for Cloud Run HTTPS)
+# Cloud Run (via Google Front End) strips untrusted X-Forwarded-* headers from external requests,
+# so trusting "*" is safe and necessary to correctly detect HTTPS protocol.
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Static files

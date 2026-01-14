@@ -42,4 +42,5 @@ ENV PORT=8080
 ENV HOST=0.0.0.0
 
 # Run the application
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Use shell form to allow variable expansion for $PORT
+CMD ["sh", "-c", "uv run uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]

@@ -17,6 +17,11 @@ if [ -z "$GCP_PROJECT_ID" ] || [ -z "$REGION" ]; then
   exit 1
 fi
 
+if [ -z "$SERP_API_KEY" ] || [ -z "$GEMINI_API_KEY" ]; then
+  echo "Error: SERP_API_KEY or GEMINI_API_KEY is not set in .env"
+  exit 1
+fi
+
 echo "🚀 Deploying to Cloud Run..."
 echo "Project: $GCP_PROJECT_ID"
 echo "Region: $REGION"
