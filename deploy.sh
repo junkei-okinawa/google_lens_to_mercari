@@ -31,7 +31,7 @@ gcloud config set project $GCP_PROJECT_ID
 
 # 環境変数のフォーマット (KEY=VALUE,KEY2=VALUE2...)
 # ユーザー指定: APIキーのみをコンテナに渡す
-ENV_VARS_STRING="SERP_API_KEY=${SERP_API_KEY},GEMINI_API_KEY=${GEMINI_API_KEY}"
+ENV_VARS_STRING="SERP_API_KEY=\"${SERP_API_KEY}\",GEMINI_API_KEY=\"${GEMINI_API_KEY}\""
 
 # デプロイ実行
 # --source . : 現在のディレクトリからビルド (Buildpacks or Dockerfile)

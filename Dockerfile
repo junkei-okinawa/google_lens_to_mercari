@@ -38,7 +38,6 @@ COPY static ./static
 COPY --from=builder /app/static/css/style.css ./static/css/style.css
 
 # Set environment variables
-ENV PORT=8080
 ENV HOST=0.0.0.0
 
 # Run the application
