@@ -3,8 +3,8 @@ FROM node:20-slim AS builder
 WORKDIR /app
 
 # Copy only files needed for npm install
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package*.json ./
+RUN npm install
 
 # Copy configuration and source files needed for Tailwind build
 COPY tailwind.config.js postcss.config.js ./
