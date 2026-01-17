@@ -16,8 +16,15 @@ Steps:
 2. **gcloud 設定**
    プロジェクトを設定します。
    ```bash
-   export $(grep -v '^#' .env | xargs)
-   gcloud config set project $GCP_PROJECT_ID
+   set -a
+   # . .env または source .env
+   . .env
+   set +a
+   
+   if ! gcloud config set project "$GCP_PROJECT_ID"; then
+     echo "Error: Failed to set project. Check your .env file."
+     exit 1
+   fi
    ```
 
 3. **デプロイ実行**
