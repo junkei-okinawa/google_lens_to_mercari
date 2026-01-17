@@ -16,10 +16,16 @@ Steps:
 2. **gcloud 設定**
    プロジェクトを設定します。
    ```bash
-   set -a
-   # . .env または source .env
-   . .env
-   set +a
+   # .env から必要な環境変数のみ読み込む
+   if [ -f .env ]; then
+     . .env
+   else
+     echo "Error: .env file not found."
+     exit 1
+   fi
+   
+   # 必要な変数だけを明示的に export する
+   export GCP_PROJECT_ID REGION SERP_API_KEY GEMINI_API_KEY
    
    if ! gcloud config set project "$GCP_PROJECT_ID"; then
      echo "Error: Failed to set project. Check your .env file."
