@@ -10,7 +10,9 @@ def test_generate_search_url_with_suggested_query():
     )
     url = service.generate_search_url(product)
     assert "keyword=Nike%20Air%20Jordan%20AJ1" in url
-    assert "status=sold_out%7Ctrading" in url
+    assert "status=sold_out" in url
+    assert "item_condition_id=3" in url
+    assert "item_types=mercari" in url
     assert "sort=created_time" in url
     assert "order=desc" in url
 

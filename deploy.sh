@@ -1,0 +1,52 @@
+#!/bin/bash
+set -e
+
+# .envファイルから環境変数を読み込む（自動的にすべてをexportしない）
+if [ -f .env ]; then
+  # 必要な変数のみを読み込む
+  source .env
+  # 必要な変数のみを明示的にexportする
+  export GCP_PROJECT_ID REGION SERP_API_KEY GEMINI_API_KEY
+else
+  echo "Error: .env file not found."
+  exit 1
+fi
+
+# 必須変数のチェック
+if [ -z "$GCP_PROJECT_ID" ] || [ -z "$REGION" ]; then
+  echo "Error: GCP_PROJECT_ID or REGION is not set in .env"
+  exit 1
+fi
+
+if [ -z "$SERP_API_KEY" ] || [ -z "$GEMINI_API_KEY" ]; then
+  echo "Error: SERP_API_KEY or GEMINI_API_KEY is not set in .env"
+  exit 1
+fi
+
+echo "🚀 Deploying to Cloud Run..."
+echo "Project: $GCP_PROJECT_ID"
+echo "Region: $REGION"
+
+# gcloudの設定
+if ! gcloud config set project "$GCP_PROJECT_ID"; then
+  echo "Error: Failed to set gcloud project to $GCP_PROJECT_ID. Please check if the project ID is correct."
+  exit 1
+fi
+
+# 環境変数のフォーマット (KEY=VALUE,KEY2=VALUE2...)
+# ユーザー指定: APIキーのみをコンテナに渡す
+# 注: 特殊文字が含まれない限り、各値に引用符を含める必要はありません
+ENV_VARS_STRING="SERP_API_KEY=${SERP_API_KEY},GEMINI_API_KEY=${GEMINI_API_KEY}"
+
+# デプロイ実行
+# --source . : 現在のディレクトリからビルド (Buildpacks or Dockerfile)
+if gcloud run deploy sedori-lens \
+  --source . \
+  --region "$REGION" \
+  --allow-unauthenticated \
+  --set-env-vars "$ENV_VARS_STRING"; then
+  echo "✅ Deployment complete!"
+else
+  echo "❌ Deployment failed! Check the logs above for details."
+  exit 1
+fi

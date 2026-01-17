@@ -21,7 +21,9 @@ class MercariService:
 
         params = {
             "keyword": query,
-            "status": "sold_out|trading",  # 売り切れ・取引中のみ（販売実績）
+            "status": "sold_out",  # 売り切れのみ
+            "item_condition_id": "3",  # 目立った傷や汚れなし
+            "item_types": "mercari",  # 個人出品のみ
             "sort": "created_time",  # 新しい順（直近の履歴）
             "order": "desc",
         }
