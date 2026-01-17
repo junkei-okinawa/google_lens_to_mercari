@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.controllers import main_controller
@@ -23,6 +23,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Routes
 app.include_router(main_controller.router)
+
+
+# Diagnostic endpoint for testing middleware
+@app.get("/debug/scheme")
+async def debug_scheme(request: Request):
+    return {"scheme": request.url.scheme}
+
 
 if __name__ == "__main__":
     import uvicorn

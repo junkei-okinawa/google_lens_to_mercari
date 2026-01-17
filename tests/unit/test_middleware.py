@@ -8,9 +8,15 @@ def test_proxy_headers_middleware():
     """
     Test that ProxyHeadersMiddleware correctly identifies HTTPS when X-Forwarded-Proto is set.
     """
+    # Without headers, it should be http (default in TestClient)
+    response_http = client.get("/debug/scheme")
+    assert response_http.json()["scheme"] == "http"
+
     # Simulate a request through a proxy with X-Forwarded-Proto: https
-    response = client.get("/", headers={"X-Forwarded-Proto": "https"})
-    assert response.status_code == 200
+    # Note: Remote ADDR must be trusted. ProxyHeadersMiddleware with trusted_hosts="*" handles this.
+    response_https = client.get("/debug/scheme", headers={"X-Forwarded-Proto": "https"})
+    assert response_https.status_code == 200
+    assert response_https.json()["scheme"] == "https"
     # Inside the app, request.url.scheme should be 'https'
     # Since we can't easily check the internal request object from TestClient response,
     # we rely on the fact that if it's correctly trusted, url_for will generate https URLs.
