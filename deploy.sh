@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# .envファイルから環境変数を読み込む
+# .envファイルから環境変数を読み込む（自動的にすべてをexportしない）
 if [ -f .env ]; then
-  # すべての変数を自動的にexportする
-  set -a
+  # 必要な変数のみを読み込む
   source .env
-  set +a
+  # 必要な変数のみを明示的にexportする
+  export GCP_PROJECT_ID REGION SERP_API_KEY GEMINI_API_KEY
 else
   echo "Error: .env file not found."
   exit 1
