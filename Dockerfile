@@ -11,6 +11,7 @@ COPY tailwind.config.js postcss.config.js ./
 COPY static/css/input.css ./static/css/
 # Copy templates because Tailwind scans them for class names
 COPY app/templates ./app/templates
+COPY static/js ./static/js
 
 RUN npm run build:css
 
