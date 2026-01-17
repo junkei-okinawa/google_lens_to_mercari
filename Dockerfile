@@ -35,7 +35,7 @@ COPY main.py .
 COPY app ./app
 COPY static ./static
 
-# Copy built CSS from builder stage (overwriting static/css/style.css if it exists from previous copy)
+# Copy the built CSS from the builder stage into the final image
 COPY --from=builder /app/static/css/style.css ./static/css/style.css
 
 # Set environment variables
