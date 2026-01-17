@@ -6,12 +6,12 @@ description: Cloud Run へのデプロイ手順
 
 Requirements:
 - Google Cloud SDK (`gcloud`) がインストール・認証済みであること。
-- プロジェクトIDとリージョンが決定していること。
+- プロジェクトIDとリージョン、および使用する API キー（`SERP_API_KEY`, `GEMINI_API_KEY`）が決定していること。
 
 Steps:
 
 1. **環境変数の確認**
-   `.env` ファイルに `GCP_PROJECT_ID` と `REGION` が設定されていることを確認してください。
+   `.env` ファイルに `GCP_PROJECT_ID`, `REGION`, `SERP_API_KEY`, `GEMINI_API_KEY` が設定されていることを確認してください。
 
 2. **gcloud 設定**
    プロジェクトを設定します。
