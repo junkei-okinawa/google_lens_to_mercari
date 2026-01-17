@@ -27,11 +27,15 @@ echo "Project: $GCP_PROJECT_ID"
 echo "Region: $REGION"
 
 # gcloudの設定
-gcloud config set project $GCP_PROJECT_ID
+if ! gcloud config set project "$GCP_PROJECT_ID"; then
+  echo "Error: Failed to set gcloud project to $GCP_PROJECT_ID. Please check if the project ID is correct."
+  exit 1
+fi
 
 # 環境変数のフォーマット (KEY=VALUE,KEY2=VALUE2...)
 # ユーザー指定: APIキーのみをコンテナに渡す
-ENV_VARS_STRING="SERP_API_KEY=\"${SERP_API_KEY}\",GEMINI_API_KEY=\"${GEMINI_API_KEY}\""
+# 注: 特殊文字が含まれない限り、各値に引用符を含める必要はありません
+ENV_VARS_STRING="SERP_API_KEY=${SERP_API_KEY},GEMINI_API_KEY=${GEMINI_API_KEY}"
 
 # デプロイ実行
 # --source . : 現在のディレクトリからビルド (Buildpacks or Dockerfile)
