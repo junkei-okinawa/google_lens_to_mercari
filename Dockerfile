@@ -27,7 +27,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN uv sync --frozen --no-dev --no-install-project
+RUN uv sync --frozen --no-dev
 
 # Copy only necessary application files
 COPY main.py .
@@ -38,8 +38,9 @@ COPY static ./static
 COPY --from=builder /app/static/css/style.css ./static/css/style.css
 
 # Set environment variables
+ENV PATH="/app/.venv/bin:$PATH"
 ENV HOST=0.0.0.0
 
 # Run the application
-# Use shell form to allow variable expansion for $PORT
-CMD ["sh", "-c", "uv run uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Use shell form to allow variable expansion for $PORT and $HOST
+CMD ["sh", "-c", "uvicorn main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8080}"]
