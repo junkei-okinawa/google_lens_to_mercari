@@ -4,6 +4,7 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.controllers import main_controller
 
 import logging
+import os
 
 # Logging configuration
 logging.basicConfig(
@@ -25,10 +26,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(main_controller.router)
 
 
-# Diagnostic endpoint for testing middleware
-@app.get("/debug/scheme")
-async def debug_scheme(request: Request):
-    return {"scheme": request.url.scheme}
+# Diagnostic endpoint for testing middleware (only in debug mode)
+if os.getenv("DEBUG", "false").lower() == "true":
+
+    @app.get("/debug/scheme")
+    async def debug_scheme(request: Request):
+        return {"scheme": request.url.scheme}
 
 
 if __name__ == "__main__":

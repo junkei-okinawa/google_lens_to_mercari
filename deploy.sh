@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # .envファイルから環境変数を読み込む（自動的にすべてをexportしない）
 if [ -f .env ]; then
